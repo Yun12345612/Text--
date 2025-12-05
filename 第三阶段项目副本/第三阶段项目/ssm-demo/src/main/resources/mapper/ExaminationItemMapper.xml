@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cykj.mapper.ExaminationItemMapper">
+    <resultMap id="BaseResultMap" type="com.cykj.pojo.ExaminationItem">
+        <!-- 实体类字段对应 -->
+        <id column="item_id" property="itemId"/>
+        <result column="item_name" property="itemName"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="item_price" property="itemPrice"/>
+        <result column="item_desc" property="itemDesc"/>
+        <result column="detail_name" property="detailName"/>
+        <result column="detail_desc" property="detailDesc"/>
+        <result column="item_is_delete" property="itemIsDelete"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="item_status" property="itemStatus"/>
+        <result column="department_name" property="departmentName"/>
+    </resultMap>
+    <!--多条件查询项目-->
+    <select id="selectList" parameterType="com.cykj.pojo.ExaminationItem" resultMap="BaseResultMap">
+        SELECT
+        ei.item_id,
+        ei.item_name,
+        ei.detail_name,
+        ei.detail_desc,
+        ei.department_id,
+        d.department_name as department_name,
+        ei.item_price,
+        ei.item_status,
+        ei.create_time,
+        ei.item_is_delete  <!-- 补充返回软删除标记 -->
+        FROM examination_item ei
+        LEFT JOIN department d ON ei.department_id = d.department_id
+        <where>
+            ei.item_is_delete = 0
+            <if test="itemName != null and itemName != ''">
+                AND ei.item_name LIKE CONCAT('%', #{itemName}, '%')
+            </if>
+            <if test="departmentId != null">
+                AND ei.department_id = #{departmentId}
+            </if>
+            <if test="itemStatus != null and itemStatus != ''">
+                AND ei.item_status = #{itemStatus}
+            </if>
+            <if test="minPrice != null">
+                AND ei.item_price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND ei.item_price &lt;= #{maxPrice}
+            </if>
+        </where>
+        ORDER BY ei.create_time DESC
+        <if test="pageNum != null and pageSize != null">
+            LIMIT ${pageNum}, ${pageSize}
+        </if>
+    </select>
+    <!--查询总条数-->
+    <select id="count" parameterType="com.cykj.pojo.ExaminationItem" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM examination_item ei
+        LEFT JOIN department d ON ei.department_id = d.department_id
+        <where>
+            ei.item_is_delete = 0
+            <if test="itemName != null and itemName != ''">
+                AND ei.item_name LIKE CONCAT('%', #{itemName}, '%')
+            </if>
+            <if test="departmentName != null and departmentName != ''">
+                AND d.department_name LIKE CONCAT('%', #{departmentName}, '%')
+            </if>
+            <if test="departmentId != null">
+                AND ei.department_id = #{departmentId}
+            </if>
+            <if test="itemStatus != null and itemStatus != ''">
+                AND ei.item_status = #{itemStatus}
+            </if>
+            <if test="minPrice != null">
+                AND ei.item_price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND ei.item_price &lt;= #{maxPrice}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

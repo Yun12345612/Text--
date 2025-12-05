@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cykj.mapper.OrderMapper">
+
+
+    <!-- 更新订单状态 -->
+    <update id="updateOrderStatus" parameterType="com.cykj.pojo.Order">
+        UPDATE `order`
+        SET status = #{status},
+        update_time = NOW()
+        <if test="status == 1">
+            , pay_time = NOW()  <!-- 如果是已支付状态，设置支付时间 -->
+        </if>
+        <if test="status == 2">
+            , finish_time = NOW()  <!-- 如果是已完成状态，设置完成时间 -->
+        </if>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 硬删除订单（根据ID） -->
+    <delete id="deleteOrderById">
+        DELETE
+        FROM `order`
+        WHERE id = #{orderId}
+    </delete>
+    <!-- 创建订单-->
+    <insert id="insertOrder" parameterType="com.cykj.pojo.Order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `order` (user_id,
+                             order_no,
+                             trace_no,
+                             order_type,
+                             total_amount,
+                             status,
+                             price,
+                             quantity,
+                             product_id,
+                             product_name,
+                             product_desc,
+                             user_phone,
+                             user_name,
+                             create_time)
+        VALUES (#{userId},
+                #{orderNo},
+                #{traceNo},
+                #{orderType},
+                #{totalAmount},
+                #{status},
+                #{price},
+                #{quantity},
+                #{productId},
+                #{productName},
+                #{productDesc},
+                #{userPhone},
+                #{userName},
+                NOW())
+    </insert>
+
+    <select id="selectOrderList" resultType="com.cykj.pojo.Order">
+        SELECT
+        id,
+        user_id as userId,
+        order_no as orderNo,
+        order_type as orderType,
+        total_amount as totalAmount,
+        status,
+        price,
+        quantity,
+        product_id as productId,
+        product_name as productName,
+        product_desc as productDesc,
+        user_phone as userPhone,
+        user_name as userName,
+        create_time as createTime,
+        pay_time as payTime,
+        finish_time as finishTime
+        FROM `order`
+        WHERE 1=1
+        <if test="orderType != null and orderType != ''">
+            AND order_type = #{orderType}
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+    <select id="selectByOrderType" resultType="com.cykj.pojo.Order">
+        SELECT id,
+               user_Phone   as userPhone,
+               user_name    as userName,
+               user_id      as userId,
+               order_no     as orderNo,
+               order_type   as orderType,
+               total_amount as totalAmount,
+               status,
+               price,
+               quantity,
+               product_id   as productId,
+               product_name as productName,
+               product_desc as productDesc,
+               create_time  as createTime,
+               pay_time     as payTime,
+               finish_time  as finishTime
+        FROM `order`
+        WHERE order_type = #{orderType}
+        ORDER BY create_time DESC
+    </select>
+    <select id="selectByTraceNo" parameterType="String" resultType="com.cykj.pojo.Order">
+        SELECT id,
+               user_id      as userId,
+               order_no     as orderNo,
+               trace_no     as traceNo,
+               order_type   as orderType,
+               total_amount as totalAmount,
+               status,
+               price,
+               quantity,
+               product_id   as productId,
+               product_name as productName,
+               product_desc as productDesc,
+               user_phone   as userPhone,
+               user_name    as userName,
+               create_time  as createTime,
+               pay_time     as payTime,
+               finish_time  as finishTime
+        FROM `order`
+        WHERE trace_no = #{traceNo}
+    </select>
+    <!--获取所有订单-->
+    <select id="selectAllOrders" resultType="com.cykj.pojo.Order">
+        SELECT ord.id,
+               ord.user_id      as userId,
+               ord.order_no     as orderNo,
+               ord.trace_no     as traceNo,
+               ord.order_type   as orderType,
+               ord.total_amount as totalAmount,
+               ord.status,
+               ord.price,
+               ord.quantity,
+               ord.product_id   as productId,
+               ord.product_name as productName,
+               ord.product_desc as productDesc,
+               ord.user_phone   as userPhone,
+               ord.user_name    as userName,
+               ord.create_time  as createTime,
+               ord.pay_time     as payTime,
+               ord.finish_time  as finishTime,
+               u.user_card as userCard
+        FROM `order` ord
+                 left join user u on ord.user_id = u.user_id
+        ORDER BY ord.create_time DESC
+    </select>
+    
+    <!-- 根据追踪号更新订单状态 -->
+    <update id="updateOrderStatusByTraceNo">
+        UPDATE `order`
+        SET status = #{status},
+            pay_time = CASE WHEN #{status} = 1 THEN NOW() ELSE pay_time END
+        WHERE trace_no = #{traceNo}
+    </update>
+
+</mapper>

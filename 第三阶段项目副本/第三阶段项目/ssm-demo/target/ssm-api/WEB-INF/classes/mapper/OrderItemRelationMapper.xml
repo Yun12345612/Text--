@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cykj.mapper.OrderItemRelationMapper">
+
+    <!-- 插入订单项目关联记录 -->
+    <insert id="insertOrderItemRelation" parameterType="com.cykj.pojo.OrderItemRelation"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_item_relation (
+            order_id,
+            item_id,
+            detail_id,
+            create_time
+        ) VALUES (
+            #{orderId},
+            #{itemId},
+            #{detailId},
+            NOW()
+        )
+    </insert>
+
+    <!-- 根据套餐ID查询包含的体检项目ID -->
+    <select id="selectItemIdsByPackageId" parameterType="Long" resultType="Long">
+        SELECT ei.item_id
+        FROM examination_package ep
+        INNER JOIN examination_item ei ON ep.item_name = ei.item_name
+        WHERE ep.package_id = #{packageId}
+    </select>
+
+</mapper>
+

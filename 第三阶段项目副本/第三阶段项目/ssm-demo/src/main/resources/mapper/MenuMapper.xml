@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cykj.mapper.MenuMapper">
+
+
+    <!-- 根据角色ID查询菜单（关联权限表） -->
+    <select id="selectMenusByRoleId" resultType="com.cykj.pojo.CyMenu">
+        select
+        m.menu_id as menuId,
+        m.menu_name as menuName,
+        m.menu_component as menuComponent,
+        m.menu_path as menuPath,
+        m.menu_icon as menuIcon,
+        m.menu_parent_id as menuParentId,
+        m.menu_status as menuStatus
+        from cy_menu m
+        inner join cy_permission p
+        on m.menu_id = p.menu_id  <!-- 通过权限表关联角色和菜单 -->
+        where
+        p.role_id = #{roleId}     <!-- 传入角色ID -->
+        and m.menu_status = 1     <!-- 只查询启用的菜单 -->
+        and m.menu_is_hidden = 0  <!-- 只查询未隐藏的菜单 -->
+        order by m.menu_sort desc     <!-- 按排序字段排序 -->
+    </select>
+
+</mapper>

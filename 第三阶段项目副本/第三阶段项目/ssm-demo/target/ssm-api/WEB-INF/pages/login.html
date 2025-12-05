@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录</title>
+    <link rel="stylesheet" href="../static/css/login.css">
+</head>
+<body>
+<div class="login-container">
+    <div class="login-box">
+        <h1 class="login-title">管理员登录</h1>
+        <form id="loginForm" onsubmit="return false;">
+            <div class="form-group">
+                <label for="adminAccount">账号</label>
+                <input type="text" id="adminAccount" name="adminAccount" placeholder="请输入账号" required>
+            </div>
+            <div class="form-group">
+                <label for="adminPwd">密码</label>
+                <input type="password" id="adminPwd" name="adminPwd" placeholder="请输入密码" required>
+            </div>
+            <div id="errorMsg" class="error-msg"></div>
+            <button type="button" class="login-btn" onclick="login()">登录</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 登录函数
+    function login() {
+        const adminAccount = document.getElementById('adminAccount').value.trim();
+        const adminPwd = document.getElementById('adminPwd').value;
+        const errorMsg = document.getElementById('errorMsg');
+
+        // 清空之前的错误提示
+        errorMsg.textContent = '';
+
+        // 验证输入
+        if (!adminAccount) {
+            errorMsg.textContent = '请输入账号';
+            return;
+        }
+        if (!adminPwd) {
+            errorMsg.textContent = '请输入密码';
+            return;
+        }
+
+        // 准备请求数据
+        const data = {
+            adminAccount: adminAccount,
+            adminPwd: adminPwd
+        };
+
+        // 发送登录请求
+        fetch('/admin/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.code === 200) {
+                    // 登录成功
+                    alert('登录成功！欢迎 ' + result.data.adminName);
+                    // 可以跳转到首页或其他页面
+                    // window.location.href = '/home.html';
+                } else {
+                    // 登录失败，显示错误信息
+                    errorMsg.textContent = result.msg || '登录失败';
+                }
+            })
+            .catch(error => {
+                console.error('登录请求失败:', error);
+                errorMsg.textContent = '网络错误，请稍后重试';
+            });
+    }
+
+    // 回车键登录
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('adminAccount').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
+        document.getElementById('adminPwd').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') login();
+        });
+    });
+</script>
+</body>
+</html>
