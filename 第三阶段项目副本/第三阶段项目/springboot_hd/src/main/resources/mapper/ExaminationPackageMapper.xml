@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.springboot_hd.mapper.ExaminationPackageMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.springboot_hd.entity.ExaminationPackage">
+        <id column="package_id" property="packageId"/>
+        <result column="package_name" property="packageName"/> <!-- 此处正确，与实体类匹配 -->
+        <result column="package_price" property="packagePrice"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="item_name" property="itemName"/>
+        <result column="package_desc" property="packageDesc"/>
+        <result column="package_status" property="packageStatus"/>
+        <result column="package_is_delete" property="packageIsDelete"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        select * from examination_package where package_id = #{packageId}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        select * from examination_package
+    </select>
+
+    <insert id="insert" parameterType="org.example.springboot_hd.entity.ExaminationPackage">
+        insert into examination_package (
+        package_name,
+        package_price,
+        create_time,
+        update_time,
+        package_desc,
+        package_status,
+        package_is_delete,
+        item_name
+        ) values (
+        #{packageName},  <!-- packeageName → packageName -->
+        #{packagePrice},
+        #{createTime},  <!-- 字段顺序与数据库一致 -->
+        #{updateTime},
+        #{packageDesc},
+        #{packageStatus},
+        #{packageIsDelete},
+        #{itemName}
+        )
+    </insert>
+
+    <update id="updateById" parameterType="org.example.springboot_hd.entity.ExaminationPackage">
+        update examination_package
+        <set>
+            <if test="packageName != null">package_name = #{packageName},</if>  <!-- 修正：packeageName → packageName -->
+            <if test="packagePrice != null">package_price = #{packagePrice},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="itemName != null">item_name = #{itemName},</if>
+            <if test="packageDesc != null">package_desc = #{packageDesc},</if>
+            <if test="packageStatus != null">package_status = #{packageStatus},</if>
+            <if test="packageIsDelete != null">package_is_delete = #{packageIsDelete},</if>
+        </set>
+        where package_id = #{packageId}
+    </update>
+
+    <delete id="deleteById">
+        delete from examination_package where package_id = #{packageId}
+    </delete>
+
+    <!-- 分页查询 -->
+    <select id="selectPage" resultMap="BaseResultMap">
+        select * from examination_package
+        <where>
+            <if test="packageName != null and packageName != ''">
+                and package_name like concat('%', #{packageName}, '%')
+            </if>
+            <if test="packageStatus != null and packageStatus != ''">
+                and package_status = #{packageStatus}
+            </if>
+
+            <if test="minPrice != null">
+                and package_price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                and package_price &lt; #{maxPrice}
+            </if>
+        </where>
+        limit #{pageNum}, #{pageSize}
+    </select>
+
+    <!-- 总条数查询 -->
+    <select id="selectTotal" resultType="int">
+        select count(*) from examination_package
+        <where>
+            <if test="packageName != null and packageName != ''">
+                and package_name like concat('%', #{packageName}, '%')
+            </if>
+            <if test="packageStatus != null and packageStatus != ''">
+                and package_status = #{packageStatus}
+            </if>
+            <if test="minPrice != null">
+                and package_price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                and package_price &lt; #{maxPrice}
+            </if>
+        </where>
+    </select>
+</mapper>

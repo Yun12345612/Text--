@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.springboot_hd.mapper.OrderItemRelationMapper">
+
+
+    <!-- 插入订单项目关联记录 -->
+    <insert id="insertOrderItemRelation" parameterType="org.example.springboot_hd.entity.OrderItemRelation"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_item_relation (
+            order_id,
+            item_id,
+            detail_id,
+            create_time,
+            order_no
+        ) VALUES (
+                     #{orderId},
+                     #{itemId},
+                     #{detailId},
+                     NOW(),
+                     #{orderNo}
+                 )
+    </insert>
+    <select id="selectDetailsByOrderNo" parameterType="String" resultType="org.example.springboot_hd.vo.OrderItemDetailVO">
+        SELECT
+            o.order_no AS orderNo,
+            o.user_name AS userName,
+            o.user_phone AS phone,
+            o.total_amount AS orderAmount,
+            CASE o.status
+                WHEN 0 THEN '待支付'
+                WHEN 1 THEN '已支付'
+                WHEN 2 THEN '已完成'
+                WHEN 3 THEN '已取消'
+                ELSE '未知状态'
+                END AS orderStatus,
+            ei.item_name AS itemName,
+            COALESCE(eid.detail_name, ei.item_name) AS detailName,
+            COALESCE(eid.detail_unit, '') AS unit,
+            COALESCE(eid.department_name, '通用科室') AS department,
+            COALESCE(CAST(eid.min_value AS CHAR), '-') AS referenceMin,
+            COALESCE(CAST(eid.max_value AS CHAR), '-') AS referenceMax,
+            COALESCE(eid.detail_desc, '') AS description,
+            '' AS checkResult,
+            '待填写' AS resultStatus,
+            CASE
+                WHEN eid.update_time IS NOT NULL THEN DATE_FORMAT(eid.update_time, '%Y-%m-%d %H:%i:%s')
+                WHEN ei.update_time IS NOT NULL THEN DATE_FORMAT(ei.update_time, '%Y-%m-%d %H:%i:%s')
+                ELSE NULL
+                END AS updateTime
+        FROM order_item_relation oir
+                 INNER JOIN `order` o ON oir.order_id = o.id
+                 INNER JOIN examination_item ei ON oir.item_id = ei.item_id
+                 LEFT JOIN item_detail_relation idr ON ei.item_id = idr.item_id
+                 LEFT JOIN examination_item_detail eid ON idr.detail_id = eid.detail_id AND eid.detail_is_delete = '0'
+        WHERE o.order_no = #{orderNo}
+    </select>
+</mapper>

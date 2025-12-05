@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.example.springboot_hd.mapper.ExaminationMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="org.example.springboot_hd.entity.Examination">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="price" property="price" jdbcType="DECIMAL"/>
+        <result column="created_time" property="createdTime" jdbcType="TIMESTAMP"/>
+        <result column="updated_time" property="updatedTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询所有体检套餐 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id,
+               name,
+               price,
+               created_time,
+               updated_time
+        FROM examination
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据ID查询体检套餐 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT id,
+               name,
+               price,
+               created_time,
+               updated_time
+        FROM examination
+        WHERE id = #{id}
+    </select>
+
+    <!-- 新增体检套餐 -->
+    <insert id="insert" parameterType="org.example.springboot_hd.entity.Examination"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO examination (name,
+                                 price,
+                                 created_time,
+                                 updated_time)
+        VALUES (#{name},
+                #{price},
+                NOW(),
+                NOW())
+    </insert>
+
+    <!-- 修改体检套餐 -->
+    <update id="update" parameterType="org.example.springboot_hd.entity.Examination">
+        UPDATE examination
+        SET name         = #{name},
+            price        = #{price},
+            updated_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除体检套餐 -->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE
+        FROM examination
+        WHERE id = #{id}
+    </delete>
+
+    <!-- 根据名称查询数量（用于验证重复） -->
+    <select id="countByName" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*)
+        FROM examination
+        WHERE name = #{name}
+    </select>
+
+    <!-- 分页查询 -->
+    <select id="selectByPage" resultMap="BaseResultMap">
+        SELECT id,
+               name,
+               price,
+               created_time,
+               updated_time
+        FROM examination
+        ORDER BY id DESC
+            LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!-- 查询总数 -->
+    <select id="selectCount" resultType="int">
+        SELECT COUNT(*)
+        FROM examination
+    </select>
+
+</mapper>

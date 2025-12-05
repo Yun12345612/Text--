@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.springboot_hd.mapper.DepartmentMapper">
+    <resultMap id="BaseResultMap" type="org.example.springboot_hd.entity.Department">
+        <id column="department_id" property="departmentId"/>
+        <result column="department_name" property="departmentName"/>
+        <result column="department_location" property="departmentLocation"/>
+        <result column="department_status" property="departmentStatus"/>
+        <result column="department_dept_desc" property="departmentDeptDesc"/>
+        <result column="department_is_delete" property="departmentIsDelete"/>
+    </resultMap>
+
+    <!-- 4. 软删除科室 -->
+    <update id="softDeleteById">
+        UPDATE department
+        SET department_is_delete = 1
+        WHERE department_id = #{id}
+          AND department_is_delete = 0
+    </update>
+
+    <!-- 3. 修改科室 -->
+    <update id="update">
+        update department
+        <set>
+            <if test="departmentName != null and departmentName != ''">department_name = #{departmentName},</if>
+            <if test="departmentLocation != null and departmentLocation != ''">department_location = #{departmentLocation},</if>
+            <if test="departmentStatus != null">department_status = #{departmentStatus},</if>
+            <if test="departmentDeptDesc != null and departmentDeptDesc != ''">department_dept_desc = #{departmentDeptDesc},</if>
+        </set>
+        where department_id = #{departmentId}
+    </update>
+
+    <!-- 2. 添加科室 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="departmentId">
+        insert into department(department_name, department_location, department_status, department_dept_desc, department_is_delete)
+        values (#{departmentName}, #{departmentLocation}, #{departmentStatus}, #{departmentDeptDesc}, 0)
+    </insert>
+
+    <!-- 1. 查单个 -->
+    <select id="selectById" parameterType="Long" resultMap="BaseResultMap">
+        SELECT department_id, department_name, department_location, department_status, department_dept_desc, department_is_delete
+        FROM department
+        WHERE department_id = #{id} AND department_is_delete = 0
+    </select>
+
+    <!-- 1.1 条件查列表 -->
+    <select id="selectList" parameterType="org.example.springboot_hd.entity.Department" resultMap="BaseResultMap">
+        SELECT department_id, department_name, department_location, department_status, department_dept_desc, department_is_delete
+        FROM department
+        <where>
+            department_is_delete = 0
+            <if test="departmentName != null and departmentName != ''">AND department_name LIKE CONCAT('%', #{departmentName}, '%')</if>
+            <if test="departmentDeptDesc != null and departmentDeptDesc != ''">
+                AND department_dept_desc LIKE CONCAT('%', #{departmentDeptDesc}, '%')
+            </if>
+            <if test="departmentStatus != null and departmentStatus != ''">
+                AND department_status = #{departmentStatus}
+            </if>
+            <if test="startTime != null">
+                AND create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND create_time &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY department_id ASC
+        <if test="pageNum != null and pageSize != null">
+            LIMIT #{pageNum}, #{pageSize}
+        </if>
+    </select>
+</mapper>

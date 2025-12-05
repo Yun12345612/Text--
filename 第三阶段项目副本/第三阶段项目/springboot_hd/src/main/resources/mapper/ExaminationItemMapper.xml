@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.springboot_hd.mapper.ExaminationItemMapper">
+
+    <!-- 实体类字段对应 -->
+    <resultMap id="BaseResultMap" type="org.example.springboot_hd.entity.ExaminationItem">
+        <id column="item_id" property="itemId"/>
+        <result column="item_name" property="itemName"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="item_price" property="itemPrice"/>
+        <result column="item_desc" property="itemDesc"/>
+        <result column="detail_name" property="detailName"/>
+        <result column="detail_desc" property="detailDesc"/>
+        <result column="item_is_delete" property="itemIsDelete"/> <!-- 匹配实体类 itemIsDelete -->
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="item_status" property="itemStatus"/> <!-- 匹配实体类 itemStatus -->
+        <result column="department_name" property="departmentName"/> <!-- 关联科室名称 -->
+    </resultMap>
+
+    <!-- 1. 新增项目：包含 item_status 字段，默认启用 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="itemId">
+        INSERT INTO examination_item
+        (order_no, item_name, department_id, item_price, item_desc, detail_name, detail_desc,
+         item_is_delete, item_status, create_time, update_time)
+        VALUES (#{orderNo}, #{itemName}, #{departmentId}, #{itemPrice}, #{itemDesc}, #{detailName}, #{detailDesc},
+                '0', 'active', NOW(), NOW()
+               )
+    </insert>
+
+    <!-- 2. 更新项目-->
+    <update id="update">
+        UPDATE examination_item
+        <set>
+            <if test="itemName != null and itemName != ''">item_name = #{itemName},</if>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            <if test="itemPrice != null">item_price = #{itemPrice},</if>
+            <if test="itemDesc != null and itemDesc != ''">item_desc = #{itemDesc},</if>
+            <if test="detailName != null and detailName != ''">detail_name = #{detailName},</if>
+            <if test="detailDesc != null and detailDesc != ''">detail_desc = #{detailDesc},</if>
+            <if test="itemStatus != null and itemStatus != ''">item_status = #{itemStatus},</if> <!-- 新增状态更新 -->
+            update_time = NOW()
+        </set>
+        WHERE item_id = #{itemId} AND item_is_delete = '0'  <!-- 条件改为 item_is_delete -->
+    </update>
+
+    <!-- 3. 软删除项目：更新 item_is_delete 为 '1' -->
+    <update id="softDelete">
+        UPDATE examination_item
+        SET item_is_delete = '1', update_time = NOW()
+        WHERE item_id = #{itemId} AND item_is_delete = '0'  <!-- 条件改为 item_is_delete -->
+    </update>
+
+    <!-- 4. 根据ID查询：只查未删除的 -->
+    <select id="selectById" parameterType="Long" resultMap="BaseResultMap">
+        SELECT
+            ei.item_id,
+            ei.item_name,
+            ei.detail_name,
+            ei.detail_desc,
+            ei.department_id,
+            d.department_name as departmentName,
+            ei.item_price,
+            ei.item_status,
+            ei.create_time,
+            ei.item_is_delete
+        FROM examination_item ei
+                 LEFT JOIN department d ON ei.department_id = d.department_id
+        WHERE ei.item_id = #{itemId} AND ei.item_is_delete = '0'
+    </select>
+
+    <!-- 5. 多条件查询（支持状态、价格区间、分页） -->
+    <select id="selectList" parameterType="org.example.springboot_hd.entity.ExaminationItem" resultMap="BaseResultMap">
+        SELECT
+        ei.item_id,
+        ei.item_name,
+        ei.detail_name,
+        ei.detail_desc,
+        ei.department_id,
+        d.department_name  as departmentName,
+        ei.item_price,
+        ei.item_status,
+        ei.create_time,
+        ei.item_is_delete  <!-- 补充返回软删除标记 -->
+        FROM examination_item ei
+        LEFT JOIN department d ON ei.department_id = d.department_id
+        <where>
+            ei.item_is_delete = 0
+            <if test="itemName != null and itemName != ''">
+                AND ei.item_name LIKE CONCAT('%', #{itemName}, '%')
+            </if>
+            <if test="departmentId != null">
+                AND ei.department_id = #{departmentId}
+            </if>
+            <if test="itemStatus != null and itemStatus != ''">
+                AND ei.item_status = #{itemStatus}
+            </if>
+            <if test="minPrice != null">
+                AND ei.item_price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND ei.item_price &lt;= #{maxPrice}
+            </if>
+        </where>
+        ORDER BY ei.create_time DESC
+        <if test="pageNum != null and pageSize != null">
+            LIMIT #{pageNum}, #{pageSize}
+        </if>
+    </select>
+
+    <select id="count" parameterType="org.example.springboot_hd.entity.ExaminationItem" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM examination_item ei
+        LEFT JOIN department d ON ei.department_id = d.department_id
+        <where>
+            ei.item_is_delete = 0
+            <if test="itemName != null and itemName != ''">
+                AND ei.item_name LIKE CONCAT('%', #{itemName}, '%')
+            </if>
+            <if test="departmentName != null and departmentName != ''">
+                AND d.department_name LIKE CONCAT('%', #{departmentName}, '%')
+            </if>
+            <if test="departmentId != null">
+                AND ei.department_id = #{departmentId}
+            </if>
+            <if test="itemStatus != null and itemStatus != ''">
+                AND ei.item_status = #{itemStatus}
+            </if>
+            <if test="minPrice != null">
+                AND ei.item_price >= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND ei.item_price &lt;= #{maxPrice}
+            </if>
+        </where>
+    </select>
+</mapper>

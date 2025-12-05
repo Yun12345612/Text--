@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.springboot_hd.mapper.ExaminationDetailSummaryMapper">
+    <!-- 定义BaseResultMap -->
+    <resultMap id="BaseResultMap" type="org.example.springboot_hd.entity.ExaminationDetailSummary">
+        <id column="id" property="id" />
+        <result column="summary_id" property="summaryId" />
+        <result column="detail_id" property="detailId" />
+        <result column="check_result" property="checkResult" />
+        <result column="result_description" property="resultDescription" />
+        <result column="doctor_name" property="doctorName" />
+        <result column="admin_id" property="adminId" />
+        <result column="config_value" property="configValue" />
+    </resultMap>
+
+    <!-- ExaminationDetailSummaryMapper.xml-->
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT * from examination_detail_summary where order_on = #{orderNo}
+    </select>
+    <!-- 根据细项ID查询小结 -->
+    <select id="selectByDetailId" resultMap="BaseResultMap">
+        SELECT
+            id, summary_id, detail_id, check_result, result_description,
+            doctor_name, admin_id, config_value
+        FROM examination_detail_summary
+        WHERE detail_id = #{detailId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据管理员ID查询小结 -->
+    <select id="selectByAdminId" resultMap="BaseResultMap">
+        SELECT
+            id, summary_id, detail_id, check_result, result_description,
+            doctor_name, admin_id, config_value
+        FROM examination_detail_summary
+        WHERE admin_id = #{adminId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 根据小结ID查询单条记录 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+            id, summary_id, detail_id, check_result, result_description,
+            doctor_name, admin_id, config_value
+        FROM examination_detail_summary
+        WHERE id = #{id}
+    </select>
+    <!-- 插入细项小结 -->
+    <insert id="insert" parameterType="org.example.springboot_hd.entity.ExaminationDetailSummary"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO examination_detail_summary (
+            summary_id,
+            detail_id,
+            check_result,
+            result_description,
+            admin_id,
+            config_value
+        ) VALUES (
+                     #{summaryId},
+                     #{detailId},
+                     #{checkResult},
+                     #{resultDescription},
+                     (SELECT id FROM admin WHERE name = #{doctorName} LIMIT 1), -- 自动关联管理员ID
+            #{checkResult} -- configValue 存储检查结果（与checkResult一致）
+            )
+    </insert>
+
+    <!-- 插入细项小结（包含完整信息，与前端提交字段对应） -->
+    <insert id="insertWithDoctorInfo" parameterType="org.example.springboot_hd.entity.ExaminationDetailSummary"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO examination_detail_summary (
+            summary_id,
+            detail_id,
+            check_result,
+            result_description,
+            doctor_name,
+            admin_id,
+            config_value,
+            order_on
+        ) VALUES (
+                     #{summaryId},
+                     #{detailId},
+                     #{checkResult}, -- 前端传递的检查结果
+                     #{resultDescription}, -- 前端传递的结果说明
+                     #{doctorName}, -- 前端传递的医生姓名
+                     (SELECT id FROM admin WHERE name = #{doctorName} LIMIT 1), -- 关联admin表获取adminId
+            #{checkResult}, -- configValue 存储检查结果（与checkResult一致）
+              #{orderOn}
+            )
+    </insert>
+
+</mapper>

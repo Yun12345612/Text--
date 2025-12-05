@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.springboot_hd.mapper.UserMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="UserResultMap" type="org.example.springboot_hd.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userCard" column="user_card"/>
+        <result property="userAge" column="user_age"/>
+        <result property="userGender" column="user_gender"/>
+        <result property="userAccount" column="user_account"/>
+        <result property="userPassword" column="user_password"/>
+        <result property="userPhone" column="user_phone"/>
+        <result property="userStatus" column="user_status"/>
+        <result property="userBalance" column="user_balance"/>
+        <result property="userIsDelete" column="user_is_delete"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+
+    <!-- 公共的查询条件 -->
+    <sql id="userWhereCondition">
+        <where>
+            <!-- 精确匹配查询 -->
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="userAccount != null and userAccount != ''">
+                AND user_account = #{userAccount}
+            </if>
+            <if test="userPhone != null and userPhone != ''">
+                AND user_phone = #{userPhone}
+            </if>
+            <if test="userCard != null and userCard != ''">
+                AND user_card = #{userCard}
+            </if>
+            <if test="userGender != null and userGender != ''">
+                AND user_gender = #{userGender}
+            </if>
+            <if test="userStatus != null">
+                AND user_status = #{userStatus}
+            </if>
+            <if test="userAge != null">
+                AND user_age = #{userAge}
+            </if>
+            <if test="userBalance != null">
+                AND user_balance = #{userBalance}
+            </if>
+            <if test="userEmail != null">
+                AND user_email = #{userEmail}
+            </if>
+            <if test="medicalExaminationNumber != null">
+                AND medical_examination_number = #{medicalExaminationNumber}
+            </if>
+            <if test="examinationNumber != null">
+                AND examination_number = #{examinationNumber}
+            </if>
+
+            <!-- 模糊查询 -->
+            <if test="userName != null and userName != ''">
+                AND user_name LIKE CONCAT('%', #{userName}, '%')
+            </if>
+
+            <!-- 状态过滤（逻辑删除） -->
+            <if test="userIsDelete != null and userIsDelete != ''">
+                AND user_is_delete = #{userIsDelete}
+            </if>
+            <!-- 如果没有传userIsDelete，默认查询未删除的用户 -->
+            <if test="userIsDelete == null or userIsDelete == ''">
+                AND (user_is_delete IS NULL OR user_is_delete = '0')
+            </if>
+        </where>
+    </sql>
+
+
+    <!-- 1. 查询用户列表 -->
+    <select id="selectUserList" parameterType="org.example.springboot_hd.entity.User" resultMap="UserResultMap">
+        SELECT * FROM user
+        <include refid="userWhereCondition"/>
+        ORDER BY create_time DESC
+        <!-- 分页支持 -->
+        <if test="start != null and pageSize != null">
+            LIMIT #{start}, #{pageSize}
+        </if>
+    </select>
+
+    <!-- 2. 查询用户总数 -->
+    <select id="selectUserCount" parameterType="org.example.springboot_hd.entity.User" resultType="int">
+        SELECT COUNT(*) FROM user
+        <include refid="userWhereCondition"/>
+    </select>
+
+    <!-- 3.新增用户 -->
+    <insert id="insertUser" parameterType="org.example.springboot_hd.entity.User" useGeneratedKeys="true"
+            keyProperty="userId">
+        INSERT INTO user (user_name,
+                          user_card,
+                          user_age,
+                          user_gender,
+                          user_account,
+                          user_password,
+                          user_phone,
+                          user_status,
+                          user_balance,
+                          user_is_delete,
+                          user_email,
+                          create_time)
+        VALUES (#{userName},
+                #{userCard},
+                #{userAge},
+                #{userGender},
+                #{userAccount},
+                #{userPassword},
+                #{userPhone},
+                #{userStatus},
+                #{userBalance},
+                #{userIsDelete},
+                #{userEmail},
+                NOW())
+    </insert>
+    <!--    更新用户信息-->
+    <update id="updateUser">
+        UPDATE user
+        <set>
+            <if test="userName != null and userName != ''">
+                user_name = #{userName},
+            </if>
+            <if test="userCard != null and userCard != ''">
+                user_card = #{userCard},
+            </if>
+            <if test="userAge != null and userAge != ''">
+                user_age = #{userAge},
+            </if>
+            <if test="userGender != null">
+                user_gender = #{userGender},
+            </if>
+            <if test="userAccount != null">
+                user_account = #{userAccount},
+            </if>
+            <if test="userPhone != null">
+                user_phone = #{userPhone},
+            </if>
+            <if test="userStatus != null">
+                user_status = #{userStatus},
+            </if>
+            <if test="userBalance != null">
+                user_balance = #{userBalance},
+            </if>
+            <if test="userIsDelete != null">
+                user_is_delete = #{userIsDelete},
+            </if>
+            <if test="userEmail != null">
+                user_email = #{userEmail}
+            </if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+    <!--软删除用户-->
+    <update id="softDeleteUser">
+        UPDATE user
+        SET user_is_delete = 1
+        WHERE user_id = #{user_id}
+    </update>
+
+</mapper>
